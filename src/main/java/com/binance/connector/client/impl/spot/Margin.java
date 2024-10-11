@@ -20,6 +20,7 @@ import com.binance.connector.client.utils.signaturegenerator.SignatureGenerator;
 public class Margin {
     private final String baseUrl;
     private final RequestHandler requestHandler;
+//    private final AsyncRequestHandler asyncRequestHandler;
     private final boolean showLimitUsage;
 
     public Margin(String baseUrl, String apiKey, String secretKey, boolean showLimitUsage, ProxyAuth proxy) {

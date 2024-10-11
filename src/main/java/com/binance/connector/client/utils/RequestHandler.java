@@ -1,17 +1,12 @@
 package com.binance.connector.client.utils;
 
-import java.util.HashMap;
-import java.util.Map;
-
+import com.binance.connector.client.enums.HttpMethod;
+import com.binance.connector.client.exceptions.BinanceConnectorException;
+import com.binance.connector.client.utils.signaturegenerator.SignatureGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.binance.connector.client.enums.HttpMethod;
-import com.binance.connector.client.exceptions.BinanceConnectorException;
-import com.binance.connector.client.utils.signaturegenerator.Ed25519SignatureGenerator;
-import com.binance.connector.client.utils.signaturegenerator.HmacSignatureGenerator;
-import com.binance.connector.client.utils.signaturegenerator.RsaSignatureGenerator;
-import com.binance.connector.client.utils.signaturegenerator.SignatureGenerator;
+import java.util.Map;
 
 public class RequestHandler {
     private final String apiKey;
@@ -48,20 +43,6 @@ public class RequestHandler {
     }
 
     public String sendSignedRequest(String baseUrl, String urlPath, Map<String, Object> parameters, HttpMethod httpMethod, boolean showLimitUsage) {                          
-        if (signatureGenerator.getClass() == HmacSignatureGenerator.class && (null == apiKey || apiKey.isEmpty())) {
-            throw new BinanceConnectorException("[RequestHandler] Secret key/API key cannot be null or empty!");
-        }
-        if ((signatureGenerator.getClass() == RsaSignatureGenerator.class || signatureGenerator.getClass() == Ed25519SignatureGenerator.class) && (null == apiKey || apiKey.isEmpty())) {
-            throw new BinanceConnectorException("[RequestHandler] Private key/API key cannot be null or empty!");
-        }
-
-        parameters = (parameters == null) ? new HashMap<String, Object>() : parameters;
-        parameters.putIfAbsent("timestamp", UrlBuilder.buildTimestamp());
-        parameters.put("signature", this.signatureGenerator.getSignature(UrlBuilder.joinQueryParameters(parameters)));
-
-        String fullUrl = UrlBuilder.buildFullUrl(baseUrl, urlPath, parameters);
-        logger.info("{} {}", httpMethod, fullUrl);
-
-        return ResponseHandler.handleResponse(RequestBuilder.buildApiKeyRequest(fullUrl, httpMethod, apiKey), showLimitUsage, proxy);
+        return ResponseHandler.handleResponse(RequestBuilder.buildSignedRequest(baseUrl, urlPath, httpMethod, parameters, apiKey, signatureGenerator), showLimitUsage, proxy);
     }
 }
